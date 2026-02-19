@@ -6,6 +6,8 @@
     "type": "git",
     "url": "https://github.com/lowRISC/opentitan",
     "commit": "304378684dfcf5be73bbd14faffa71790793d8c6",
+    "ip_path": "hw/ip/dma",
+    "private": false,
     "rtl_path": "rtl",
     "rtl_files": [
       "rtl/dma.sv",
@@ -14,5 +16,51 @@
       "rtl/dma_reg_top.sv"
     ]
   },
-  "updated": "2026-02-19T06:03:45Z"
+  "updated": "2026-02-19T06:12:02Z",
+  "$schema": "https://vyges.com/schema/v1/vyges-metadata.schema.json",
+  "x-version": "1.0.0",
+  "description": "Dma. OpenTitan IP block from hw/ip/dma.",
+  "template": "opentitan-ip-template@1.0.0",
+  "target": [
+    "fpga",
+    "asic"
+  ],
+  "design_type": [
+    "digital"
+  ],
+  "maturity": "imported",
+  "created": "2026-02-19T06:12:02Z",
+  "interfaces": [
+    {
+      "type": "bus",
+      "direction": "input",
+      "protocol": "TL-UL",
+      "width": 32,
+      "description": "TL-UL host interface for register access"
+    },
+    {
+      "type": "bus",
+      "direction": "output",
+      "protocol": "TL-UL",
+      "width": 32,
+      "description": "TL-UL host for DMA transactions"
+    }
+  ],
+  "categories": {
+    "primary": "memory",
+    "secondary": [
+      "dma",
+      "transfer"
+    ],
+    "tags": [
+      "dma",
+      "transfer",
+      "opentitan",
+      "lowrisc-opentitan"
+    ]
+  },
+  "community": {
+    "issues": "https://github.com/vyges-ip/opentitan-dma/issues",
+    "contributions": "https://github.com/vyges-ip/opentitan-dma/pulls"
+  }
 }
