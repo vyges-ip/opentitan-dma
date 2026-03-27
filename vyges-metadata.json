@@ -3,24 +3,218 @@
   "x-version": "1.0.0",
   "name": "opentitan-dma",
   "version": "0.1.0",
-  "description": "DMA controller for memory-to-memory and memory-to-peripheral transfers with TileLink-UL host and device interfaces. Extracted from OpenTitan (lowRISC).",
+  "description": "A DMA controller from the OpenTitan project, supporting TL-UL protocol, register-based configuration, and features such as integrity checks, RACL policy enforcement, and support for various transfer modes.",
   "license": "Apache-2.0",
   "maturity": "production",
-  "target": ["asic", "fpga"],
-  "design_type": ["digital"],
-  "created": "2026-02-19T06:12:02Z",
-  "updated": "2026-03-27T19:35:00Z",
-  "source": {"type": "git", "url": "https://github.com/lowRISC/opentitan", "private": false, "rtl_path": "rtl"},
-  "maintainers": [{"name": "Vyges", "email": "team@vyges.com", "github": "vyges"}],
-  "interfaces": [{"type": "bus", "direction": "slave", "protocol": "TL-UL", "port": "tl", "width": 32}],
-  "architecture": {"type": "peripheral", "features": ["Memory-to-memory and memory-to-peripheral DMA transfers", "TL-UL host (master) port for memory access", "TL-UL device (slave) port for configuration", "4 RTL files, 6,076 lines"]},
-  "dependencies": [{"name": "opentitan-prim", "type": "library"}, {"name": "opentitan-tlul", "type": "bus"}],
-  "documentation": {"upstream": "https://opentitan.org/book/hw/ip/dma/"},
-  "artifacts": {"total_rtl_lines": 6076},
-  "categories": {"primary": "peripheral", "secondary": ["dma", "infrastructure"], "tags": ["dma", "transfer", "memory", "opentitan", "tl-ul"]},
-  "trust": {"verification_level": "silicon_proven", "tapeout_count": 3, "maintained": true, "last_activity": "2026-03-27"},
-  "asic": {"flavor": "digital", "technology": ["sky130A"]},
-  "fpga": {"toolchain": ["Vivado", "Yosys"]},
-  "keywords": ["dma", "opentitan", "tl-ul"],
-  "meta": {"template": {"generator": "manual (gold-standard pass 2026-03-27)"}, "schema": {"version": "1.0.0"}}
+  "target": [
+    "asic",
+    "fpga"
+  ],
+  "design_type": [
+    "digital"
+  ],
+  "created": "2026-03-27T23:05:01Z",
+  "updated": "2026-03-27T23:05:01Z",
+  "source": {
+    "type": "git",
+    "url": "https://github.com/lowRISC/opentitan",
+    "commit": "7fbd85829ec6354ef6497df69536cefe862c1f5a",
+    "ip_path": "hw/ip/dma",
+    "private": false,
+    "containsEncryptedPayload": false,
+    "indexing": true
+  },
+  "maintainers": [
+    {
+      "name": "Vyges",
+      "email": "team@vyges.com",
+      "url": "https://vyges.com",
+      "github": "vyges"
+    }
+  ],
+  "interfaces": [
+    {
+      "type": "bus",
+      "direction": "slave",
+      "protocol": "TL-UL",
+      "port": "tl_i",
+      "width": 32,
+      "description": "TL-UL host-to-device interface for incoming transactions."
+    },
+    {
+      "type": "bus",
+      "direction": "master",
+      "protocol": "TL-UL",
+      "port": "tl_o",
+      "width": 32,
+      "description": "TL-UL device-to-host interface for outgoing transactions."
+    },
+    {
+      "type": "clock",
+      "direction": "input",
+      "port": "clk_i",
+      "width": 1,
+      "description": "Clock input signal."
+    },
+    {
+      "type": "reset",
+      "direction": "input",
+      "port": "rst_ni",
+      "width": 1,
+      "description": "Active-low reset signal."
+    },
+    {
+      "type": "bus",
+      "direction": "output",
+      "protocol": "custom",
+      "port": "reg2hw",
+      "width": 32,
+      "description": "Register-to-hardware interface for write operations."
+    },
+    {
+      "type": "bus",
+      "direction": "input",
+      "protocol": "custom",
+      "port": "hw2reg",
+      "width": 32,
+      "description": "Hardware-to-register interface for read operations."
+    },
+    {
+      "type": "bus",
+      "direction": "input",
+      "protocol": "custom",
+      "port": "racl_policies_i",
+      "width": 63,
+      "description": "Input for RACL policy vector."
+    },
+    {
+      "type": "bus",
+      "direction": "output",
+      "protocol": "custom",
+      "port": "racl_error_o",
+      "width": 1,
+      "description": "Output for RACL error log."
+    },
+    {
+      "type": "interrupt",
+      "direction": "output",
+      "port": "intg_err_o",
+      "width": 1,
+      "description": "Integrity error output signal."
+    }
+  ],
+  "parameters": [
+    {
+      "name": "EnableRacl",
+      "type": "bit",
+      "default": 0,
+      "description": "Enable RACL policy enforcement."
+    },
+    {
+      "name": "RaclErrorRsp",
+      "type": "bit",
+      "default": 1,
+      "description": "Enable RACL error response."
+    },
+    {
+      "name": "RaclPolicySelVec",
+      "type": "array",
+      "default": "{dma_reg_pkg::NumRegs{0}}",
+      "description": "RACL policy selection vector."
+    }
+  ],
+  "performance": {},
+  "architecture": {
+    "type": "peripheral",
+    "features": [
+      "Register-based configuration",
+      "TL-UL protocol support",
+      "Integrity check and error reporting",
+      "RACL policy enforcement",
+      "Support for multiple transfer modes (e.g., copy, SHA-256, SHA-384, SHA-512)"
+    ]
+  },
+  "asic": {
+    "flavor": "digital",
+    "technology": [
+      "sky130A"
+    ]
+  },
+  "fpga": {
+    "toolchain": [
+      "Vivado"
+    ],
+    "devices": [
+      "Artix-7"
+    ]
+  },
+  "dependencies": [
+    {
+      "name": "tlul_pkg",
+      "type": "library",
+      "description": "TileLink UL protocol package."
+    },
+    {
+      "name": "dma_reg_pkg",
+      "type": "library",
+      "description": "DMA register package for configuration and control."
+    },
+    {
+      "name": "prim_assert",
+      "type": "library",
+      "description": "Primitive assertion library for verification."
+    },
+    {
+      "name": "prim_reg_we_check",
+      "type": "library",
+      "description": "Primitive register write-enable checker."
+    },
+    {
+      "name": "tlul_adapter_reg",
+      "type": "library",
+      "description": "TL-UL adapter for register interface."
+    }
+  ],
+  "test": {
+    "testbenches": [],
+    "status": "upstream_passing",
+    "coverage": "functional"
+  },
+  "documentation": {
+    "upstream": "https://github.com/lowRISC/opentitan"
+  },
+  "artifacts": {
+    "total_rtl_lines": 6076
+  },
+  "categories": [
+    {
+      "main_category": "Interface Controllers",
+      "sub_category": "High-Speed Interfaces"
+    }
+  ],
+  "keywords": [
+    "DMA",
+    "TL-UL",
+    "OpenTitan",
+    "RACL",
+    "Integrity Check"
+  ],
+  "trust": {
+    "verification_level": "silicon_proven",
+    "tapeout_count": 0,
+    "fpga_validated": false,
+    "formal_verified": false,
+    "maintained": true,
+    "last_activity": "2026-03-27T23:05:01Z"
+  },
+  "meta": {
+    "template": {
+      "generator": "github-models-ai",
+      "template_version": "1.0.0",
+      "generated_at": "2026-03-27T23:05:01Z"
+    },
+    "schema": {
+      "version": "1.0.0"
+    }
+  }
 }
