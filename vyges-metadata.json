@@ -3,7 +3,7 @@
   "x-version": "1.0.0",
   "name": "opentitan-dma",
   "version": "0.1.0",
-  "description": "A DMA controller from the OpenTitan project, supporting TL-UL protocol, register-based configuration, and features such as integrity checks, RACL policy enforcement, and support for various transfer modes.",
+  "description": "A DMA controller from the OpenTitan project, supporting TL-UL protocol for memory transfers with integrity checks, error handling, and RACL policy enforcement.",
   "license": "Apache-2.0",
   "maturity": "production",
   "target": [
@@ -13,12 +13,12 @@
   "design_type": [
     "digital"
   ],
-  "created": "2026-03-27T23:05:01Z",
-  "updated": "2026-03-27T23:05:01Z",
+  "created": "2026-04-01T06:05:33Z",
+  "updated": "2026-04-01T06:05:33Z",
   "source": {
     "type": "git",
     "url": "https://github.com/lowRISC/opentitan",
-    "commit": "7fbd85829ec6354ef6497df69536cefe862c1f5a",
+    "commit": "4be12ad66f947eb28efb785cf644643bf75517af",
     "ip_path": "hw/ip/dma",
     "private": false,
     "containsEncryptedPayload": false,
@@ -39,7 +39,7 @@
       "protocol": "TL-UL",
       "port": "tl_i",
       "width": 32,
-      "description": "TL-UL host-to-device interface for incoming transactions."
+      "description": "Incoming TL-UL bus interface for memory transactions."
     },
     {
       "type": "bus",
@@ -47,60 +47,63 @@
       "protocol": "TL-UL",
       "port": "tl_o",
       "width": 32,
-      "description": "TL-UL device-to-host interface for outgoing transactions."
+      "description": "Outgoing TL-UL bus interface for memory transactions."
     },
     {
       "type": "clock",
       "direction": "input",
+      "protocol": "generic",
       "port": "clk_i",
       "width": 1,
-      "description": "Clock input signal."
+      "description": "Clock input for the DMA controller."
     },
     {
       "type": "reset",
       "direction": "input",
+      "protocol": "generic",
       "port": "rst_ni",
       "width": 1,
-      "description": "Active-low reset signal."
-    },
-    {
-      "type": "bus",
-      "direction": "output",
-      "protocol": "custom",
-      "port": "reg2hw",
-      "width": 32,
-      "description": "Register-to-hardware interface for write operations."
-    },
-    {
-      "type": "bus",
-      "direction": "input",
-      "protocol": "custom",
-      "port": "hw2reg",
-      "width": 32,
-      "description": "Hardware-to-register interface for read operations."
-    },
-    {
-      "type": "bus",
-      "direction": "input",
-      "protocol": "custom",
-      "port": "racl_policies_i",
-      "width": 63,
-      "description": "Input for RACL policy vector."
-    },
-    {
-      "type": "bus",
-      "direction": "output",
-      "protocol": "custom",
-      "port": "racl_error_o",
-      "width": 1,
-      "description": "Output for RACL error log."
+      "description": "Active-low reset input for the DMA controller."
     },
     {
       "type": "interrupt",
       "direction": "output",
+      "protocol": "generic",
       "port": "intg_err_o",
       "width": 1,
-      "description": "Integrity error output signal."
+      "description": "Integrity error interrupt output."
+    },
+    {
+      "type": "custom",
+      "direction": "output",
+      "protocol": "generic",
+      "port": "reg2hw",
+      "width": 63,
+      "description": "Register-to-hardware interface for DMA control signals."
+    },
+    {
+      "type": "custom",
+      "direction": "input",
+      "protocol": "generic",
+      "port": "hw2reg",
+      "width": 63,
+      "description": "Hardware-to-register interface for DMA status signals."
+    },
+    {
+      "type": "custom",
+      "direction": "input",
+      "protocol": "generic",
+      "port": "racl_policies_i",
+      "width": 63,
+      "description": "Input for RACL policy enforcement."
+    },
+    {
+      "type": "custom",
+      "direction": "output",
+      "protocol": "generic",
+      "port": "racl_error_o",
+      "width": 1,
+      "description": "Output for RACL error logging."
     }
   ],
   "parameters": [
@@ -118,8 +121,8 @@
     },
     {
       "name": "RaclPolicySelVec",
-      "type": "array",
-      "default": "{dma_reg_pkg::NumRegs{0}}",
+      "type": "enum",
+      "default": "dma_reg_pkg::NumRegs{0}",
       "description": "RACL policy selection vector."
     }
   ],
@@ -127,11 +130,10 @@
   "architecture": {
     "type": "peripheral",
     "features": [
-      "Register-based configuration",
-      "TL-UL protocol support",
-      "Integrity check and error reporting",
+      "TL-UL bus interface",
       "RACL policy enforcement",
-      "Support for multiple transfer modes (e.g., copy, SHA-256, SHA-384, SHA-512)"
+      "Integrity error detection",
+      "Memory transfer control"
     ]
   },
   "asic": {
@@ -152,27 +154,17 @@
     {
       "name": "tlul_pkg",
       "type": "library",
-      "description": "TileLink UL protocol package."
+      "description": "TL-UL protocol package for bus transactions."
     },
     {
       "name": "dma_reg_pkg",
       "type": "library",
-      "description": "DMA register package for configuration and control."
+      "description": "DMA register package for control and status signals."
     },
     {
       "name": "prim_assert",
       "type": "library",
-      "description": "Primitive assertion library for verification."
-    },
-    {
-      "name": "prim_reg_we_check",
-      "type": "library",
-      "description": "Primitive register write-enable checker."
-    },
-    {
-      "name": "tlul_adapter_reg",
-      "type": "library",
-      "description": "TL-UL adapter for register interface."
+      "description": "Assertion library for design verification."
     }
   ],
   "test": {
@@ -189,14 +181,14 @@
   "categories": [
     {
       "main_category": "Interface Controllers",
-      "sub_category": "High-Speed Interfaces"
+      "sub_category": "Parallel Interfaces"
     }
   ],
   "keywords": [
     "DMA",
     "TL-UL",
     "OpenTitan",
-    "RACL",
+    "Memory Transfer",
     "Integrity Check"
   ],
   "trust": {
@@ -205,13 +197,13 @@
     "fpga_validated": false,
     "formal_verified": false,
     "maintained": true,
-    "last_activity": "2026-03-27T23:05:01Z"
+    "last_activity": "2026-04-01"
   },
   "meta": {
     "template": {
       "generator": "github-models-ai",
       "template_version": "1.0.0",
-      "generated_at": "2026-03-27T23:05:01Z"
+      "generated_at": "2026-04-01T06:05:33Z"
     },
     "schema": {
       "version": "1.0.0"
