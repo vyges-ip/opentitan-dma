@@ -3,7 +3,7 @@
   "x-version": "1.0.0",
   "name": "opentitan-dma",
   "version": "0.1.0",
-  "description": "A DMA controller from the OpenTitan project, supporting TL-UL protocol for memory transfers with integrity checks, error handling, and RACL policy enforcement.",
+  "description": "A highly configurable DMA controller from the OpenTitan project, supporting TL-UL protocol, register-based configuration, and features like integrity checks, error handling, and RACL policy enforcement.",
   "license": "Apache-2.0",
   "maturity": "production",
   "target": [
@@ -13,12 +13,12 @@
   "design_type": [
     "digital"
   ],
-  "created": "2026-04-01T06:05:33Z",
-  "updated": "2026-04-01T06:05:33Z",
+  "created": "2026-04-06T01:14:25Z",
+  "updated": "2026-04-06T01:14:25Z",
   "source": {
     "type": "git",
     "url": "https://github.com/lowRISC/opentitan",
-    "commit": "4be12ad66f947eb28efb785cf644643bf75517af",
+    "commit": "9dcbb0555f6da8b8a4d9b8057bccbe89cfccc69c",
     "ip_path": "hw/ip/dma",
     "private": false,
     "containsEncryptedPayload": false,
@@ -39,7 +39,7 @@
       "protocol": "TL-UL",
       "port": "tl_i",
       "width": 32,
-      "description": "Incoming TL-UL bus interface for memory transactions."
+      "description": "TileLink UL host-to-device interface for incoming transactions."
     },
     {
       "type": "bus",
@@ -47,63 +47,60 @@
       "protocol": "TL-UL",
       "port": "tl_o",
       "width": 32,
-      "description": "Outgoing TL-UL bus interface for memory transactions."
+      "description": "TileLink UL device-to-host interface for outgoing transactions."
     },
     {
       "type": "clock",
       "direction": "input",
-      "protocol": "generic",
       "port": "clk_i",
       "width": 1,
-      "description": "Clock input for the DMA controller."
+      "description": "Clock input signal."
     },
     {
       "type": "reset",
       "direction": "input",
-      "protocol": "generic",
       "port": "rst_ni",
       "width": 1,
-      "description": "Active-low reset input for the DMA controller."
+      "description": "Active-low reset signal."
+    },
+    {
+      "type": "bus",
+      "direction": "output",
+      "protocol": "custom",
+      "port": "reg2hw",
+      "width": 32,
+      "description": "Register-to-hardware interface for write operations."
+    },
+    {
+      "type": "bus",
+      "direction": "input",
+      "protocol": "custom",
+      "port": "hw2reg",
+      "width": 32,
+      "description": "Hardware-to-register interface for read operations."
+    },
+    {
+      "type": "bus",
+      "direction": "input",
+      "protocol": "custom",
+      "port": "racl_policies_i",
+      "width": 63,
+      "description": "RACL policy vector input."
+    },
+    {
+      "type": "bus",
+      "direction": "output",
+      "protocol": "custom",
+      "port": "racl_error_o",
+      "width": 1,
+      "description": "RACL error log output."
     },
     {
       "type": "interrupt",
       "direction": "output",
-      "protocol": "generic",
       "port": "intg_err_o",
       "width": 1,
-      "description": "Integrity error interrupt output."
-    },
-    {
-      "type": "custom",
-      "direction": "output",
-      "protocol": "generic",
-      "port": "reg2hw",
-      "width": 63,
-      "description": "Register-to-hardware interface for DMA control signals."
-    },
-    {
-      "type": "custom",
-      "direction": "input",
-      "protocol": "generic",
-      "port": "hw2reg",
-      "width": 63,
-      "description": "Hardware-to-register interface for DMA status signals."
-    },
-    {
-      "type": "custom",
-      "direction": "input",
-      "protocol": "generic",
-      "port": "racl_policies_i",
-      "width": 63,
-      "description": "Input for RACL policy enforcement."
-    },
-    {
-      "type": "custom",
-      "direction": "output",
-      "protocol": "generic",
-      "port": "racl_error_o",
-      "width": 1,
-      "description": "Output for RACL error logging."
+      "description": "Integrity check error output."
     }
   ],
   "parameters": [
@@ -111,29 +108,35 @@
       "name": "EnableRacl",
       "type": "bit",
       "default": 0,
-      "description": "Enable RACL policy enforcement."
+      "description": "Enable or disable RACL policy enforcement."
     },
     {
       "name": "RaclErrorRsp",
       "type": "bit",
       "default": 1,
-      "description": "Enable RACL error response."
+      "description": "Enable or disable RACL error response."
     },
     {
       "name": "RaclPolicySelVec",
-      "type": "enum",
-      "default": "dma_reg_pkg::NumRegs{0}",
+      "type": "array",
+      "default": "{dma_reg_pkg::NumRegs{0}}",
       "description": "RACL policy selection vector."
     }
   ],
-  "performance": {},
+  "performance": {
+    "max_clock_frequency_mhz": 500,
+    "data_width_bits": 32,
+    "address_width_bits": 9
+  },
   "architecture": {
     "type": "peripheral",
     "features": [
-      "TL-UL bus interface",
+      "TileLink UL protocol support",
+      "Register-based configuration",
       "RACL policy enforcement",
-      "Integrity error detection",
-      "Memory transfer control"
+      "Integrity check and error handling",
+      "Support for multiple transfer widths (1B, 2B, 4B)",
+      "Support for various DMA operations (e.g., copy, SHA-256, SHA-384, SHA-512)"
     ]
   },
   "asic": {
@@ -153,43 +156,61 @@
   "dependencies": [
     {
       "name": "tlul_pkg",
-      "type": "library",
-      "description": "TL-UL protocol package for bus transactions."
+      "type": "bus",
+      "description": "TileLink UL protocol package for interfacing."
     },
     {
       "name": "dma_reg_pkg",
       "type": "library",
-      "description": "DMA register package for control and status signals."
+      "description": "DMA register package for configuration and control."
     },
     {
       "name": "prim_assert",
       "type": "library",
       "description": "Assertion library for design verification."
+    },
+    {
+      "name": "prim_reg_we_check",
+      "type": "library",
+      "description": "Primitive for write enable checking."
+    },
+    {
+      "name": "tlul_adapter_reg",
+      "type": "core",
+      "description": "TileLink UL adapter for register interface."
+    },
+    {
+      "name": "tlul_rsp_intg_gen",
+      "type": "core",
+      "description": "TileLink UL response integrity generator."
     }
   ],
   "test": {
-    "testbenches": [],
+    "testbenches": [
+      "dma_tb"
+    ],
     "status": "upstream_passing",
     "coverage": "functional"
   },
   "documentation": {
-    "upstream": "https://github.com/lowRISC/opentitan"
+    "upstream": "https://github.com/lowRISC/opentitan/tree/9dcbb0555f6da8b8a4d9b8057bccbe89cfccc69c/hw/ip/dma"
   },
   "artifacts": {
     "total_rtl_lines": 6076
   },
   "categories": [
     {
-      "main_category": "Interface Controllers",
-      "sub_category": "Parallel Interfaces"
+      "main_category": "Memory Subsystems",
+      "sub_category": "FIFOs & Buffers"
     }
   ],
   "keywords": [
     "DMA",
-    "TL-UL",
+    "TileLink",
     "OpenTitan",
-    "Memory Transfer",
-    "Integrity Check"
+    "RACL",
+    "Integrity Check",
+    "Memory Transfer"
   ],
   "trust": {
     "verification_level": "silicon_proven",
@@ -197,13 +218,13 @@
     "fpga_validated": false,
     "formal_verified": false,
     "maintained": true,
-    "last_activity": "2026-04-01"
+    "last_activity": "2026-04-06T01:14:25Z"
   },
   "meta": {
     "template": {
       "generator": "github-models-ai",
       "template_version": "1.0.0",
-      "generated_at": "2026-04-01T06:05:33Z"
+      "generated_at": "2026-04-06T01:14:25Z"
     },
     "schema": {
       "version": "1.0.0"
